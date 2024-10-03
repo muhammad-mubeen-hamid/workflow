@@ -1,4 +1,4 @@
-name: Publish Plugin
+name: Create Tag and Deploy to SVN
 
 on:
   push:
@@ -6,25 +6,37 @@ on:
       - master
 
 jobs:
-  tag:
-    name: Publish
+  create-tag:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
-      - name: Check SVN Version
-        run: svn --version
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          persist-credentials: true
 
+      - name: Run Create Tag Script
+        run: ./scripts/create_tag.sh
+        env:
+          GITHUB_SHA: ${{ github.sha }}
 
-      - uses: actions/checkout@master
-      - name: WordPress Plugin Deploy
-        run: |
-          echo "Checking out SVN repository"
-          svn checkout --username "${{ secrets.WORDPRESS_SVN_USERNAME }}" --password "${{ secrets.WORDPRESS_SVN_PASSWORD }}" https://plugins.svn.wordpress.org/ikhokha-payment-gateway/
-          echo "Syncing files"
-          rsync -a $GITHUB_WORKSPACE/trunk/ ikhokha-payment-gateway/trunk
-          rsync -a $GITHUB_WORKSPACE/assets/ ikhokha-payment-gateway/assets
-          cd ikhokha-payment-gateway
-          echo "Adding files to SVN"
-          svn add . --force
-          echo "Committing changes"
-          svn commit -m "Updated. SHA: ${{ github.sha }}" --no-auth-cache --non-interactive  --username "${{ secrets.WORDPRESS_SVN_USERNAME }}" --password "${{ secrets.WORDPRESS_SVN_PASSWORD }}"
+  publish-plugin:
+    needs: create-tag
+    runs-on: ubuntu-latest
+    if: success()
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run Deploy SVN Script
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          VERSION: ${{ env.VERSION }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: ./scripts/publish_plugin.sh

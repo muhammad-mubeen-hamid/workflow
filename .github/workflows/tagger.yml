@@ -3,21 +3,16 @@ name: Create Tag
 on:
   push:
     branches:
-      - 'feature/**'
+      - 'donolo'
 
 jobs:
   create-tag-folder:
     runs-on: ubuntu-latest
-    if: >
-      startsWith(github.event.head_commit.message, 'v') &&
-      contains(github.event.head_commit.message, '.') &&
-      github.event.head_commit.message == '^v[0-9]+\\.[0-9]+\\.[0-9]+$'
 
     permissions:
       contents: write
 
     steps:
-      # Step 1: Checkout the repository
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
