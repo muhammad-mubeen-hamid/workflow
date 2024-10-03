@@ -8,7 +8,10 @@ on:
 jobs:
   create-tag-folder:
     runs-on: ubuntu-latest
-    if: "! contains(github.event.head_commit.message, 'Create tag folder')"  # Prevent re-triggering
+    if: >
+      startsWith(github.event.head_commit.message, 'v') &&
+      contains(github.event.head_commit.message, '.') &&
+      github.event.head_commit.message == '^v[0-9]+\\.[0-9]+\\.[0-9]+$'
 
     permissions:
       contents: write
@@ -20,10 +23,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
-          fetch-depth: 0  # Fetch all history to access commit messages
-          persist-credentials: true  # Ensure the GITHUB_TOKEN is available for pushing
+          fetch-depth: 0
+          persist-credentials: true
 
-      # Step 2: Extract Version Number from Commit Message
       - name: Extract Version Number
         id: extract_version
         run: |
@@ -44,7 +46,6 @@ jobs:
             exit 1
           fi
 
-      # Step 3: Check if Tag Already Exists
       - name: Check if Tag Exists
         run: |
           if [ -d "tags/${{ env.VERSION }}" ]; then
@@ -54,18 +55,10 @@ jobs:
             echo "Tag folder tags/${{ env.VERSION }} does not exist. Proceeding to create."
           fi
 
-      # Step 4: Create Tag Folder and Copy Files
       - name: Create Tag Folder and Copy Files
         run: |
           mkdir -p tags/${{ env.VERSION }}
-
-          # Copy all content except the 'tags' and '.git' directories
           rsync -av --exclude='tags' --exclude='.git' ./ tags/${{ env.VERSION }}/
-
-          # Optionally, remove the workflow files from the tag if not needed
-          rm -rf tags/${{ env.VERSION }}/.github
-
-          # List the contents of the new tag folder for verification
           ls -R tags/${{ env.VERSION }}/
 
       - name: Display Git Configurations
