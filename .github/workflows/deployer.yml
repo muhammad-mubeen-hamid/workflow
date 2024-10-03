@@ -13,6 +13,7 @@ jobs:
     permissions:
       contents: write
 
+
     steps:
       # Step 1: Checkout the repository
       - name: Checkout Repository
@@ -70,9 +71,13 @@ jobs:
       - name: Display Git Configurations
         run: git config --list
 
-      # Step 6: Commit and Push Tag Folder
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Commit and Push Tag Folder
         run: |
           git add tags/${{ env.VERSION }}/
           git commit -m "Create tag folder v${{ env.VERSION }} from commit ${{ github.sha }}"
-          git push
+          git push origin ${{ github.ref }}
