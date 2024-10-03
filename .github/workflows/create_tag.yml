@@ -11,7 +11,6 @@ jobs:
     if: >
       startsWith(github.event.head_commit.message, 'version.')
 
-
     permissions:
       contents: write
 
