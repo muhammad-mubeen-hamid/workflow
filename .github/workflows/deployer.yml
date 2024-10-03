@@ -71,9 +71,9 @@ jobs:
       - name: Display Git Configurations
         run: git config --list
 
+      # Step 6: Commit and Push Tag Folder
       - name: Commit and Push Tag Folder
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Create tag folder v${{ env.VERSION }} from commit ${{ github.sha }}"
-          branch: ${{ github.ref }}  # Commit to the same branch
-          file_pattern: 'tags/${{ env.VERSION }}/**'
+        run: |
+          git add tags/${{ env.VERSION }}/
+          git commit -m "Create tag folder v${{ env.VERSION }} from commit ${{ github.sha }}"
+          git push
