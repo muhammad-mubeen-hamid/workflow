@@ -59,6 +59,7 @@ jobs:
           # Optionally, remove the workflow files from the tag if not needed
           rm -rf tags/${{ env.VERSION }}/.github
           
+          
           # List the contents of the new tag folder for verification
           ls -R tags/${{ env.VERSION }}/
 
