@@ -20,7 +20,7 @@ jobs:
           persist-credentials: true
 
       - name: Run Create Tag Script
-        run: ../scripts/create_tag.sh
+        run: ./scripts/create_tag.sh
         env:
           GITHUB_SHA: ${{ github.sha }}
 
@@ -39,4 +39,4 @@ jobs:
           SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
           VERSION: ${{ env.VERSION }}
           GITHUB_SHA: ${{ github.sha }}
-        run: ../scripts/publish_plugin.sh
+        run: ./scripts/publish_plugin.sh
