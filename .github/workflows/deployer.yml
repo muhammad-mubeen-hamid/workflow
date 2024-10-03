@@ -63,7 +63,14 @@ jobs:
           # List the contents of the new tag folder for verification
           ls -R tags/${{ env.VERSION }}/
 
-      # Step 5: Commit and Push Tag Folder
+      # Step 5: Configure Git
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          echo "Git user.name and user.email configured."
+
+      # Step 6: Commit and Push Tag Folder
       - name: Commit and Push Tag Folder
         run: |
           git add tags/${{ env.VERSION }}/
