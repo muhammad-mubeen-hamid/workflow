@@ -77,4 +77,4 @@ jobs:
           branch: ${{ github.ref }}  # Commit to the same branch
           file_pattern: 'tags/${{ env.VERSION }}/**'
         env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+          GITHUB_TOKEN: 234
