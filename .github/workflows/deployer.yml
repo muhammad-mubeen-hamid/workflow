@@ -63,6 +63,9 @@ jobs:
           # List the contents of the new tag folder for verification
           ls -R tags/${{ env.VERSION }}/
 
+      - name: Display Git Configurations
+        run: git config --list
+
       # Step 5: Configure Git
       - name: Configure Git
         run: |
