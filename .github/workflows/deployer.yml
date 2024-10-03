@@ -76,5 +76,3 @@ jobs:
           commit_message: "Create tag folder v${{ env.VERSION }} from commit ${{ github.sha }}"
           branch: ${{ github.ref }}  # Commit to the same branch
           file_pattern: 'tags/${{ env.VERSION }}/**'
-        env:
-          GITHUB_TOKEN: 234
