@@ -1,30 +1,32 @@
-name: Create Tag Folder
+name: Create Tag
 
 on:
   push:
     branches:
-      - 'feature/**'
+      - 'donolo'
 
 jobs:
   create-tag-folder:
     runs-on: ubuntu-latest
-    if: "! contains(github.event.head_commit.message, 'Create tag folder')"  # Prevent re-triggering
+
+    permissions:
+      contents: write
 
     steps:
-      # Step 1: Checkout the repository
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all history to access commit messages
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          persist-credentials: true
 
-      # Step 2: Extract Version Number from Commit Message
       - name: Extract Version Number
         id: extract_version
         run: |
           # Get the latest commit message
           COMMIT_MESSAGE=$(git log -1 --pretty=%B)
           echo "Latest commit message: $COMMIT_MESSAGE"
-          
+
           # Use regex to extract version number (e.g., v3.04 or 3.04)
           if [[ "$COMMIT_MESSAGE" =~ v?([0-9]+)\.([0-9]+)\.?([0-9]*) ]]; then
             MAJOR=${BASH_REMATCH[1]}
@@ -38,7 +40,6 @@ jobs:
             exit 1
           fi
 
-      # Step 3: Check if Tag Already Exists
       - name: Check if Tag Exists
         run: |
           if [ -d "tags/${{ env.VERSION }}" ]; then
@@ -48,32 +49,22 @@ jobs:
             echo "Tag folder tags/${{ env.VERSION }} does not exist. Proceeding to create."
           fi
 
-      # Step 4: Create Tag Folder and Copy Files
       - name: Create Tag Folder and Copy Files
         run: |
           mkdir -p tags/${{ env.VERSION }}
-          
-          # Copy all content except the 'tags' directory itself
-          rsync -av --exclude='tags' ./ tags/${{ env.VERSION }}/
-          
-          # Optionally, remove the workflow files from the tag if not needed
-          rm -rf tags/${{ env.VERSION }}/.github
-          
-          # List the contents of the new tag folder for verification
+          rsync -av --exclude='tags' --exclude='.git' ./ tags/${{ env.VERSION }}/
           ls -R tags/${{ env.VERSION }}/
 
-      # Step 5: Configure Git
+      - name: Display Git Configurations
+        run: git config --list
+
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      # Step 6: Commit and Push Tag Folder
       - name: Commit and Push Tag Folder
         run: |
           git add tags/${{ env.VERSION }}/
           git commit -m "Create tag folder v${{ env.VERSION }} from commit ${{ github.sha }}"
-          git push
-        env:
-          # GITHUB_TOKEN is automatically provided by GitHub Actions
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          git push origin ${{ github.ref }}
