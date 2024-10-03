@@ -1,0 +1,29 @@
+name: Publish Plugin
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  tag:
+    name: Publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check SVN Version
+        run: svn --version
+
+      - uses: actions/checkout@master
+      - name: WordPress Plugin Deploy
+        run: |
+          echo "Checking out SVN repository"
+          svn checkout --username "${{ secrets.WORDPRESS_SVN_USERNAME }}" --password "${{ secrets.WORDPRESS_SVN_PASSWORD }}" https://plugins.svn.wordpress.org/ikhokha-payment-gateway/
+          echo "Syncing files"
+          rsync -a $GITHUB_WORKSPACE/trunk/ ikhokha-payment-gateway/trunk
+          rsync -a $GITHUB_WORKSPACE/assets/ ikhokha-payment-gateway/assets
+          cd ikhokha-payment-gateway
+          echo "Adding files to SVN"
+          svn add . --force
+          echo "Committing changes"
+          svn commit -m "Updated. SHA: ${{ github.sha }}" --no-auth-cache --non-interactive  --username "${{ secrets.WORDPRESS_SVN_USERNAME }}" --password "${{ secrets.WORDPRESS_SVN_PASSWORD }}"

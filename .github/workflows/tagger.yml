@@ -1,4 +1,4 @@
-name: Create Tag Folder
+name: Create Tag
 
 on:
   push:
