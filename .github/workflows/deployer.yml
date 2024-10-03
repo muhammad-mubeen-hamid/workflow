@@ -66,16 +66,11 @@ jobs:
       - name: Display Git Configurations
         run: git config --list
 
-      # Step 5: Configure Git
-      - name: Configure Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          echo "Git user.name and user.email configured."
-
-      # Step 6: Commit and Push Tag Folder
       - name: Commit and Push Tag Folder
-        run: |
-          git add tags/${{ env.VERSION }}/
-          git commit -m "Create tag folder v${{ env.VERSION }} from commit ${{ github.sha }}"
-          git push
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "Create tag folder v${{ env.VERSION }} from commit ${{ github.sha }}"
+          branch: ${{ github.ref }}  # Commit to the same branch
+          file_pattern: 'tags/${{ env.VERSION }}/**'
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
