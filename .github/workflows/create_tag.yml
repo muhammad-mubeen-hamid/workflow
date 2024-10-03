@@ -54,6 +54,7 @@ jobs:
       - name: Create Tag Folder and Copy Files
         run: |
           mkdir -p tags/${{ env.VERSION }}
+          
           rsync -av --exclude='tags' --exclude='.git' ./ tags/${{ env.VERSION }}/
           ls -R tags/${{ env.VERSION }}/
 
