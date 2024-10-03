@@ -27,8 +27,6 @@ jobs:
         run: |
           COMMIT_MESSAGE=$(git log -1 --pretty=%B)
           echo "Latest commit message: $COMMIT_MESSAGE"
-          
-          
 
           if [[ "$COMMIT_MESSAGE" =~ ^version\.([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
             MAJOR=${BASH_REMATCH[1]}
