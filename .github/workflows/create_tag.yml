@@ -30,7 +30,7 @@ jobs:
           
           
 
-          if [[ "$COMMIT_MESSAGE" =~ version.([0-9]+)\.([0-9]+)\.?([0-9]*) ]]; then
+          if [[ "$COMMIT_MESSAGE" =~ ^version\.([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
             MAJOR=${BASH_REMATCH[1]}
             MINOR=${BASH_REMATCH[2]}
             PATCH=${BASH_REMATCH[3]:-0}  # Default to 0 if patch is empty
