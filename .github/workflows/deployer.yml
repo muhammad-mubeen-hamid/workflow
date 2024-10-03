@@ -78,4 +78,4 @@ jobs:
         run: |
           git add tags/${{ env.VERSION }}/
           git commit -m "Create tag folder v${{ env.VERSION }} from commit ${{ github.sha }}"
-          git push 
+          git push
