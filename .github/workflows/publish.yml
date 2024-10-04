@@ -3,7 +3,7 @@ name: Deploy to SVN
 on:
   push:
     branches:
-      - master  # Trigger on pushes to the master branch
+      - master
 
 jobs:
   deploy-svn:
@@ -13,7 +13,7 @@ jobs:
       - name: Checkout Git Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all history
+          fetch-depth: 0
 
       - name: Install SVN
         run: |
