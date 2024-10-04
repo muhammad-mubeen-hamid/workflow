@@ -41,6 +41,15 @@ jobs:
             exit 1
           fi
 
+      - name: Ensure Tags Directory Exists
+        run: |
+          if [ ! -d "tags" ]; then
+            echo "Tags directory does not exist. Creating 'tags/' directory."
+            mkdir tags
+          else
+            echo "'tags/' directory already exists."
+          fi
+
       - name: Check if Tag Exists
         run: |
           if [ -d "tags/${{ env.VERSION }}" ]; then

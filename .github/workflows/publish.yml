@@ -22,7 +22,7 @@ jobs:
 
       - name: Checkout SVN Repository
         run: |
-          svn checkout --username "$SVN_USERNAME" --password "$SVN_PASSWORD" "$SVN_REPO_URL" svn-repo
+          svn checkout --username "$SVN_USERNAME" --password "$SVN_PASSWORD" https://svn.riouxsvn.com/melowing svn-repo
         env:
           SVN_USERNAME: ${{ secrets.WORDPRESS_SVN_USERNAME }}
           SVN_PASSWORD: ${{ secrets.WORDPRESS_SVN_PASSWORD }}
