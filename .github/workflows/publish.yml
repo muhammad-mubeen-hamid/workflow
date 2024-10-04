@@ -10,19 +10,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the Git repository
       - name: Checkout Git Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Fetch all history
 
-      # Step 2: Install SVN
       - name: Install SVN
         run: |
           sudo apt-get update
           sudo apt-get install -y subversion
 
-      # Step 3: Checkout the SVN Repository
       - name: Checkout SVN Repository
         run: |
           svn checkout --username "$SVN_USERNAME" --password "$SVN_PASSWORD" "$SVN_REPO_URL" svn-repo
@@ -31,7 +28,6 @@ jobs:
           SVN_PASSWORD: ${{ secrets.WORDPRESS_SVN_PASSWORD }}
           SVN_REPO_URL: https://svn.riouxsvn.com/melowing
 
-      # Step 4: Sync Git Folders to SVN
       - name: Sync Folders to SVN
         run: |
           # Define source and destination paths
@@ -51,13 +47,11 @@ jobs:
           # Sync tags
           rsync -av --delete "$SRC_TAGS" "$DST_TAGS"
 
-      # Step 5: Add New Files to SVN
       - name: Add New Files to SVN
         run: |
           cd svn-repo
           svn add --force * --auto-props --parents --depth infinity -q
 
-      # Step 6: Commit Changes to SVN
       - name: Commit Changes to SVN
         run: |
           cd svn-repo
