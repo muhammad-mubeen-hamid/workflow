@@ -1,42 +1,67 @@
-name: Create Tag and Deploy to SVN
+name: Deploy to SVN
 
 on:
   push:
     branches:
-      - master
+      - master  # Trigger on pushes to the master branch
 
 jobs:
-  create-tag:
+  deploy-svn:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
-      - name: Checkout Repository
+      # Step 1: Checkout the Git repository
+      - name: Checkout Git Repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
-          fetch-depth: 0
-          persist-credentials: true
+          fetch-depth: 0  # Fetch all history
 
-      - name: Run Create Tag Script
-        run: ./scripts/create_tag.sh
+      # Step 2: Install SVN
+      - name: Install SVN
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y subversion
+
+      # Step 3: Checkout the SVN Repository
+      - name: Checkout SVN Repository
+        run: |
+          svn checkout --username "$SVN_USERNAME" --password "$SVN_PASSWORD" "$SVN_REPO_URL" svn-repo
         env:
-          GITHUB_SHA: ${{ github.sha }}
+          SVN_USERNAME: ${{ secrets.WORDPRESS_SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.WORDPRESS_SVN_PASSWORD }}
+          SVN_REPO_URL: https://svn.riouxsvn.com/melowing
 
-  publish-plugin:
-    needs: create-tag
-    runs-on: ubuntu-latest
-    if: success()
+      # Step 4: Sync Git Folders to SVN
+      - name: Sync Folders to SVN
+        run: |
+          # Define source and destination paths
+          SRC_TRUNK="./trunk/"
+          SRC_ASSETS="./assets/"
+          SRC_TAGS="./tags/"
+          DST_TRUNK="svn-repo/trunk/"
+          DST_ASSETS="svn-repo/assets/"
+          DST_TAGS="svn-repo/tags/"
 
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+          # Sync trunk
+          rsync -av --delete "$SRC_TRUNK" "$DST_TRUNK"
 
-      - name: Run Deploy SVN Script
+          # Sync assets
+          rsync -av --delete "$SRC_ASSETS" "$DST_ASSETS"
+
+          # Sync tags
+          rsync -av --delete "$SRC_TAGS" "$DST_TAGS"
+
+      # Step 5: Add New Files to SVN
+      - name: Add New Files to SVN
+        run: |
+          cd svn-repo
+          svn add --force * --auto-props --parents --depth infinity -q
+
+      # Step 6: Commit Changes to SVN
+      - name: Commit Changes to SVN
+        run: |
+          cd svn-repo
+          svn commit -m "Deploy trunk, assets, and tags from Git commit $GITHUB_SHA" --username "$SVN_USERNAME" --password "$SVN_PASSWORD" --no-auth-cache --non-interactive
         env:
-          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
-          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
-          VERSION: ${{ env.VERSION }}
-          GITHUB_SHA: ${{ github.sha }}
-        run: ./scripts/publish_plugin.sh
+          SVN_USERNAME: ${{ secrets.WORDPRESS_SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.WORDPRESS_SVN_PASSWORD }}

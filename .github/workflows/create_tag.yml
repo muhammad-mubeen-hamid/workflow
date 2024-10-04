@@ -1,4 +1,4 @@
-name: Create Tag
+name: Create Plugin Tag
 
 on:
   push:
