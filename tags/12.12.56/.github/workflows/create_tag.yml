@@ -1,0 +1,68 @@
+name: Create Plugin Tag
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+
+jobs:
+  create-tag:
+    runs-on: ubuntu-latest
+    if: >
+      startsWith(github.event.head_commit.message, 'version.')
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Extract Version Number
+        id: extract_version
+        run: |
+          COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+          echo "Latest commit message: $COMMIT_MESSAGE"
+
+          if [[ "$COMMIT_MESSAGE" =~ ^version\.([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            MAJOR=${BASH_REMATCH[1]}
+            MINOR=${BASH_REMATCH[2]}
+            PATCH=${BASH_REMATCH[3]:-0}  # Default to 0 if patch is empty
+            VERSION="$MAJOR.$MINOR.$PATCH"
+            echo "Extracted version: $VERSION"
+            echo "VERSION=$VERSION" >> $GITHUB_ENV
+          else
+            echo "No valid version number found in the commit message. Exiting."
+            echo "Commit message should start with 'version.' followed by a valid version number (e.g. 'version.1.2.3')."
+            exit 1
+          fi
+
+      - name: Check if Tag Exists
+        run: |
+          if [ -d "tags/${{ env.VERSION }}" ]; then
+            echo "Tag folder tags/${{ env.VERSION }} already exists."
+            exit 1
+          else
+            echo "Tag folder tags/${{ env.VERSION }} does not exist. Proceeding to create."
+          fi
+
+      - name: Create Tag Folder and Copy Files
+        run: |
+          mkdir -p tags/${{ env.VERSION }}
+          rsync -av --exclude='tags' --exclude='.git' ./ tags/${{ env.VERSION }}/
+          ls -R tags/${{ env.VERSION }}/
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit and Push Tag Folder
+        run: |
+          git add tags/${{ env.VERSION }}/
+          git commit -m "Create tag folder v${{ env.VERSION }} from commit ${{ github.sha }}"
+          git push origin ${{ github.ref }}
