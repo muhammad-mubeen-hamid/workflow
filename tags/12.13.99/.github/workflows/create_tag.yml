@@ -3,11 +3,13 @@ name: Create Tag
 on:
   push:
     branches:
-      - 'donolo'
+      - 'feature/**'
 
 jobs:
-  create-tag-folder:
+  create-tag:
     runs-on: ubuntu-latest
+    if: >
+      startsWith(github.event.head_commit.message, 'version.')
 
     permissions:
       contents: write
@@ -23,12 +25,11 @@ jobs:
       - name: Extract Version Number
         id: extract_version
         run: |
-          # Get the latest commit message
           COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+          
           echo "Latest commit message: $COMMIT_MESSAGE"
 
-          # Use regex to extract version number (e.g., v3.04 or 3.04)
-          if [[ "$COMMIT_MESSAGE" =~ v?([0-9]+)\.([0-9]+)\.?([0-9]*) ]]; then
+          if [[ "$COMMIT_MESSAGE" =~ version.([0-9]+)\.([0-9]+)\.?([0-9]*) ]]; then
             MAJOR=${BASH_REMATCH[1]}
             MINOR=${BASH_REMATCH[2]}
             PATCH=${BASH_REMATCH[3]:-0}  # Default to 0 if patch is empty
@@ -36,7 +37,8 @@ jobs:
             echo "Extracted version: $VERSION"
             echo "VERSION=$VERSION" >> $GITHUB_ENV
           else
-            echo "No valid version number found in the commit message."
+            echo "No valid version number found in the commit message. Exiting."
+            echo "Commit message should start with 'version.' followed by a valid version number (e.g. 'version.1.2.3')."
             exit 1
           fi
 
@@ -54,9 +56,6 @@ jobs:
           mkdir -p tags/${{ env.VERSION }}
           rsync -av --exclude='tags' --exclude='.git' ./ tags/${{ env.VERSION }}/
           ls -R tags/${{ env.VERSION }}/
-
-      - name: Display Git Configurations
-        run: git config --list
 
       - name: Configure Git
         run: |
