@@ -5,8 +5,8 @@ Tags: woocommerce,payment gateway,ikhokha
 Requires at least: 5.6
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag:  2.0.2
-Version: 2.0.2
+Stable tag:  2.0.3
+Version: 2.0.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -165,3 +165,6 @@ You can now use the WooCommerce Block-Based Checkout when creating your checkout
 
 = 2.0.2 =
 * Miscellaneous fixes and important security updates
+
+= 2.0.3 =
+* New changes coming soon
