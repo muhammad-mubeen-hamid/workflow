@@ -14,6 +14,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.head_ref }}
           fetch-depth: 0
           persist-credentials: true
 
@@ -63,7 +64,7 @@ jobs:
         run: |
           git add tags/
           git commit -m "Create tag folder v${{ env.VERSION }} from commit $GITHUB_SHA"
-          git push origin master
+          git push origin ${{ github.ref }}
 
       # Step 7: Install SVN
       - name: Install SVN
