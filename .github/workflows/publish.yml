@@ -12,14 +12,12 @@ jobs:
       contents: write
 
     steps:
-      # Step 1: Checkout Repository
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: true
 
-      # Step 2: Extract Version from Readme.txt
       - name: Extract Version from Readme
         id: extract_version
         run: |
@@ -43,13 +41,13 @@ jobs:
             exit 1
           fi
 
-      # Step 4: Check if the Tag Folder Already Exists
-      - name: Check if Tag Folder Exists
+      - name: Remove Existing Tag Folder
         run: |
-            echo "Creating tag folder tags/${{ env.VERSION }}."
-            mkdir -p tags/${{ env.VERSION }}
+          if [ -d "tags/${{ env.VERSION }}" ]; then
+            echo "Tag folder tags/${{ env.VERSION }} already exists. Removing it."
+            rm -rf tags/${{ env.VERSION }}
+          fi
 
-      # Step 5: Create Tag Folder and Copy Files
       - name: Copy Files to Tag Folder
         run: |
           rsync -av --exclude='tags' --exclude='.git' --exclude='.github' ./ tags/${{ env.VERSION }}/
@@ -60,40 +58,34 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      # Step 6: Commit and Push Tag Folder
       - name: Commit and Push Tag Folder
         run: |
           git add tags/
           git commit -m "Create tag folder v${{ env.VERSION }} from commit $GITHUB_SHA"
           git push origin master
 
-      # Step 7: Install SVN
       - name: Install SVN
         run: |
           sudo apt-get update
           sudo apt-get install -y subversion
 
-      # Step 8: Checkout SVN Repository
       - name: Checkout SVN Repository
         run: |
           svn checkout --username "${{ secrets.WORDPRESS_SVN_USERNAME }}" --password "${{ secrets.WORDPRESS_SVN_PASSWORD }}" "$SVN_REPO_URL" svn-repo
         env:
           SVN_REPO_URL: https://svn.riouxsvn.com/ikhokha-payment
 
-      # Step 9: Sync Folders to SVN
       - name: Sync Folders to SVN
         run: |
           rsync -av --delete ./trunk/ svn-repo/trunk/
           rsync -av --delete ./assets/ svn-repo/assets/
           rsync -av --delete ./tags/ svn-repo/tags/
 
-      # Step 10: Add New Files to SVN
       - name: Add New Files to SVN
         run: |
           cd svn-repo
           svn add --force * --auto-props --parents --depth infinity -q
 
-      # Step 11: Commit Changes to SVN
       - name: Commit Changes to SVN
         run: |
           cd svn-repo
