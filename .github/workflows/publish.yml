@@ -1,4 +1,4 @@
-name: Deploy to SVN
+name: Tag and Deploy
 
 on:
   push:
@@ -6,56 +6,25 @@ on:
       - master
 
 jobs:
-  deploy-svn:
+  tag-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Git Repository
+      # Step 1: Checkout Repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: true
 
-      - name: Install SVN
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y subversion
+      # Step 2: Run Version Tagging Script
+      - name: Run Version Tagging Script
+        run: ./scripts/version_tag.sh
 
-      - name: Checkout SVN Repository
-        run: |
-          svn checkout --username "$SVN_USERNAME" --password "$SVN_PASSWORD" https://svn.riouxsvn.com/melowing svn-repo
+      # Step 3: Run Deployment Script
+      - name: Run Deployment Script
+        run: ./scripts/deploy_svn.sh
         env:
           SVN_USERNAME: ${{ secrets.WORDPRESS_SVN_USERNAME }}
           SVN_PASSWORD: ${{ secrets.WORDPRESS_SVN_PASSWORD }}
-          SVN_REPO_URL: https://svn.riouxsvn.com/melowing
-
-      - name: Sync Folders to SVN
-        run: |
-          # Define source and destination paths
-          SRC_TRUNK="./trunk/"
-          SRC_ASSETS="./assets/"
-          SRC_TAGS="./tags/"
-          DST_TRUNK="svn-repo/trunk/"
-          DST_ASSETS="svn-repo/assets/"
-          DST_TAGS="svn-repo/tags/"
-
-          # Sync trunk
-          rsync -av --delete "$SRC_TRUNK" "$DST_TRUNK"
-
-          # Sync assets
-          rsync -av --delete "$SRC_ASSETS" "$DST_ASSETS"
-
-          # Sync tags
-          rsync -av --delete "$SRC_TAGS" "$DST_TAGS"
-
-      - name: Add New Files to SVN
-        run: |
-          cd svn-repo
-          svn add --force * --auto-props --parents --depth infinity -q
-
-      - name: Commit Changes to SVN
-        run: |
-          cd svn-repo
-          svn commit -m "Deploy trunk, assets, and tags from Git commit $GITHUB_SHA" --username "$SVN_USERNAME" --password "$SVN_PASSWORD" --no-auth-cache --non-interactive
-        env:
-          SVN_USERNAME: ${{ secrets.WORDPRESS_SVN_USERNAME }}
-          SVN_PASSWORD: ${{ secrets.WORDPRESS_SVN_PASSWORD }}
+          SVN_REPO_URL: https://svn.riouxsvn.com/ikhokha-payment

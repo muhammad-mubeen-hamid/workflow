@@ -3,7 +3,7 @@ name: Create Plugin Tag
 on:
   push:
     branches:
-      - 'feature/**'
+      - 'delta/**'
 
 jobs:
   create-tag:
