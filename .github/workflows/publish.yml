@@ -53,6 +53,11 @@ jobs:
           rsync -av --exclude='tags' --exclude='.git' --exclude='.github' ./ tags/${{ env.VERSION }}/
           ls -R tags/${{ env.VERSION }}/
 
+      - name: Configure Git User
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
       # Step 6: Commit and Push Tag Folder
       - name: Commit and Push Tag Folder
         run: |
