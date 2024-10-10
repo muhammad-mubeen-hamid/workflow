@@ -19,11 +19,11 @@ jobs:
 
       # Step 2: Run Version Tagging Script
       - name: Run Version Tagging Script
-        run: ../scripts/version_tag.sh
+        run: ./.github/scripts/version_tag.sh
 
       # Step 3: Run Deployment Script
       - name: Run Deployment Script
-        run: ../scripts/deploy.sh
+        run: ./.github/scripts/deploy.sh
         env:
           SVN_USERNAME: ${{ secrets.WORDPRESS_SVN_USERNAME }}
           SVN_PASSWORD: ${{ secrets.WORDPRESS_SVN_PASSWORD }}
