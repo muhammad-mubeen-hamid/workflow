@@ -8,13 +8,14 @@ on:
 jobs:
   tag-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       # Step 1: Checkout Repository
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
           fetch-depth: 0
           persist-credentials: true
 
@@ -64,7 +65,7 @@ jobs:
         run: |
           git add tags/
           git commit -m "Create tag folder v${{ env.VERSION }} from commit $GITHUB_SHA"
-          git push origin ${{ github.ref }}
+          git push origin master
 
       # Step 7: Install SVN
       - name: Install SVN
