@@ -2,7 +2,7 @@
 set -e
 
 # Define the path to the readme file
-README_PATH="trunk/readme.txt"
+README_PATH="trunk/readme.md"
 
 # Check if the readme file exists
 if [ ! -f "$README_PATH" ]; then
