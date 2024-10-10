@@ -21,16 +21,9 @@ else
   exit 1
 fi
 
-# Ensure tags directory exists
-if [ ! -d "tags" ]; then
-  echo "Creating 'tags/' directory."
-  mkdir tags
-fi
-
 # Check if the tag already exists
 if [ -d "tags/$VERSION" ]; then
-  echo "Tag folder tags/$VERSION already exists. Exiting."
-  exit 1
+  echo "Tag folder tags/$VERSION already exists."
 else
   echo "Creating tag folder tags/$VERSION."
   mkdir -p tags/$VERSION
