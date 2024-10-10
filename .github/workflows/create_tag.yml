@@ -9,7 +9,7 @@ jobs:
   create-tag:
     runs-on: ubuntu-latest
     if: >
-      startsWith(github.event.head_commit.message, 'version.')
+      startsWith(github.event.head_commit.message, 'create tag')
 
     permissions:
       contents: write
@@ -48,15 +48,6 @@ jobs:
             mkdir tags
           else
             echo "'tags/' directory already exists."
-          fi
-
-      - name: Check if Tag Exists
-        run: |
-          if [ -d "tags/${{ env.VERSION }}" ]; then
-            echo "Tag folder tags/${{ env.VERSION }} already exists."
-            exit 1
-          else
-            echo "Tag folder tags/${{ env.VERSION }} does not exist. Proceeding to create."
           fi
 
       - name: Create Tag Folder and Copy Files
