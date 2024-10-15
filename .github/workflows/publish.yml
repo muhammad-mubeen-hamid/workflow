@@ -8,7 +8,7 @@ on:
 jobs:
   # Job 1: Version Tagging
   version-tagging:
-    if: "! contains(github.event.head_commit.message, '[skip-deploy]')"  # Skip if the commit contains [skip-deploy]
+    if: "! contains(github.event.head_commit.message, '[skip-deploy]')"
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -45,7 +45,6 @@ jobs:
             exit 1
           fi
 
-      # Step 3: Remove Existing Tag Folder if It Exists (Overwrite)
       - name: Remove Existing Tag Folder
         run: |
           if [ -d "tags/${{ env.VERSION }}" ]; then
@@ -53,27 +52,23 @@ jobs:
             rm -rf tags/${{ env.VERSION }}
           fi
 
-      # Step 4: Create Tag Folder and Copy Files
       - name: Create Tag Folder and Copy Files
         run: |
           mkdir -p tags/${{ env.VERSION }}
           rsync -av --exclude='tags' --exclude='.git' --exclude='.github' ./ tags/${{ env.VERSION }}/
           ls -R tags/${{ env.VERSION }}/
 
-      # Step 5: Configure Git User
       - name: Configure Git User
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      # Step 6: Commit and Push Tag Folder (with [skip-deploy] flag to avoid recursive trigger)
       - name: Commit and Push Tag Folder
         run: |
           git add tags/
           git commit -m "Create tag folder v${{ env.VERSION }} from commit $GITHUB_SHA [skip-deploy]"
           git push origin ${{ github.ref }}
 
-  # Job 2: Deploy to SVN (Runs after version-tagging job completes)
   deploy-svn:
     needs: version-tagging  # This job runs only if version-tagging completes successfully
     runs-on: ubuntu-latest
@@ -100,6 +95,10 @@ jobs:
           svn checkout --username "${{ secrets.WORDPRESS_SVN_USERNAME }}" --password "${{ secrets.WORDPRESS_SVN_PASSWORD }}" "$SVN_REPO_URL"
         env:
           SVN_REPO_URL: https://svn.riouxsvn.com/ikhokha-payment
+
+      - name: list content of tag folder
+        run: |
+          ls -R ikhokha-payment/tags/
 
       # Step 4: Sync Folders to SVN
       - name: Sync Folders to SVN
