@@ -1,4 +1,4 @@
-name: Version Tagging and Deploy to SVN
+name: Publish to WordPress.org
 
 on:
   push:
@@ -64,7 +64,7 @@ jobs:
         run: |
           git add tags/
           git commit -m "Create tag folder v${{ env.VERSION }} from commit $GITHUB_SHA [skip-deploy]"
-          git push origin ${{ github.ref }}
+          git push origin master
 
   deploy-svn:
     needs: version-tagging
@@ -93,10 +93,6 @@ jobs:
           svn checkout --username "${{ secrets.WORDPRESS_SVN_USERNAME }}" --password "${{ secrets.WORDPRESS_SVN_PASSWORD }}" "$SVN_REPO_URL"
         env:
           SVN_REPO_URL: https://svn.riouxsvn.com/ikhokha-payment
-
-      - name: list content of tag folder
-        run: |
-          ls -R ikhokha-payment/tags/
 
       - name: Sync Folders to SVN
         run: |
