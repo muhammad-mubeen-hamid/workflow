@@ -3,7 +3,7 @@ name: Version Tagging and Deploy to SVN
 on:
   push:
     branches:
-      - master
+      - mkaster
 
 jobs:
   # Job 1: Version Tagging
