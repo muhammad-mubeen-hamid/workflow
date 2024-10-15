@@ -4,6 +4,8 @@ new delta
 
 version new created
 
-Version: 2.0.10
+adding version 2.10.5
+
+Version: 2.10.5
 
 SHAKA LAKA BOOM BOOM
