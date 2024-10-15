@@ -3,7 +3,7 @@ name: Version Tagging
 on:
   push:
     branches:
-      - 'feature/**'
+      - 'delta/**'
 
 jobs:
   create-tag:

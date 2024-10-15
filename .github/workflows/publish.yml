@@ -1,4 +1,4 @@
-name: Deploy to SVN
+name: Version Tagging and Deploy to SVN
 
 on:
   push:
@@ -6,39 +6,115 @@ on:
       - master
 
 jobs:
-  deploy-svn:
+  # Job 1: Version Tagging
+  version-tagging:
+    if: "! contains(github.event.head_commit.message, '[skip-deploy]')"  # Skip if the commit contains [skip-deploy]
     runs-on: ubuntu-latest
     permissions:
       contents: write
 
     steps:
+      # Step 1: Checkout Repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      # Step 2: Extract Version from Readme.txt
+      - name: Extract Version from Readme
+        id: extract_version
+        run: |
+          README_PATH="trunk/readme.md"
+
+          # Check if the readme file exists
+          if [ ! -f "$README_PATH" ]; then
+            echo "Error: Readme file not found at $README_PATH. Exiting."
+            exit 1
+          fi
+
+          # Extract the version number from the readme file
+          VERSION_LINE=$(grep -i "^Version:" "$README_PATH" || true)
+
+          if [[ "$VERSION_LINE" =~ ^Version:\ ([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            VERSION="${BASH_REMATCH[1]}"
+            echo "Extracted version: $VERSION"
+            echo "VERSION=$VERSION" >> $GITHUB_ENV
+          else
+            echo "Error: No valid version number found in the readme file. Exiting."
+            exit 1
+          fi
+
+      # Step 3: Remove Existing Tag Folder if It Exists (Overwrite)
+      - name: Remove Existing Tag Folder
+        run: |
+          if [ -d "tags/${{ env.VERSION }}" ]; then
+            echo "Tag folder tags/${{ env.VERSION }} already exists. Removing it."
+            rm -rf tags/${{ env.VERSION }}
+          fi
+
+      # Step 4: Create Tag Folder and Copy Files
+      - name: Create Tag Folder and Copy Files
+        run: |
+          mkdir -p tags/${{ env.VERSION }}
+          rsync -av --exclude='tags' --exclude='.git' --exclude='.github' ./ tags/${{ env.VERSION }}/
+          ls -R tags/${{ env.VERSION }}/
+
+      # Step 5: Configure Git User
+      - name: Configure Git User
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # Step 6: Commit and Push Tag Folder (with [skip-deploy] flag to avoid recursive trigger)
+      - name: Commit and Push Tag Folder
+        run: |
+          git add tags/
+          git commit -m "Create tag folder v${{ env.VERSION }} from commit $GITHUB_SHA [skip-deploy]"
+          git push origin ${{ github.ref }}
+
+  # Job 2: Deploy to SVN (Runs after version-tagging job completes)
+  deploy-svn:
+    needs: version-tagging  # This job runs only if version-tagging completes successfully
+    runs-on: ubuntu-latest
+    if: "! contains(github.event.head_commit.message, '[skip-deploy]')"  # Skip if the commit contains [skip-deploy]
+    permissions:
+      contents: write
+
+    steps:
+      # Step 1: Checkout Repository
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # Step 2: Install SVN
       - name: Install SVN
         run: |
           sudo apt-get update
           sudo apt-get install -y subversion
 
+      # Step 3: Checkout SVN Repository
       - name: Checkout SVN Repository
         run: |
-          svn checkout --username "${{ secrets.WORDPRESS_SVN_USERNAME }}" --password "${{ secrets.WORDPRESS_SVN_PASSWORD }}" "$SVN_REPO_URL" svn-repo
+          svn checkout --username "${{ secrets.WORDPRESS_SVN_USERNAME }}" --password "${{ secrets.WORDPRESS_SVN_PASSWORD }}" "$SVN_REPO_URL"
         env:
           SVN_REPO_URL: https://svn.riouxsvn.com/ikhokha-payment
 
+      # Step 4: Sync Folders to SVN
       - name: Sync Folders to SVN
         run: |
           rsync -av --delete ./trunk/ svn-repo/trunk/
           rsync -av --delete ./assets/ svn-repo/assets/
           rsync -av --delete ./tags/ svn-repo/tags/
 
+      # Step 5: Add New Files to SVN
       - name: Add New Files to SVN
         run: |
           cd svn-repo
           svn add --force * --auto-props --parents --depth infinity -q
 
+      # Step 6: Commit Changes to SVN
       - name: Commit Changes to SVN
         run: |
           cd svn-repo
