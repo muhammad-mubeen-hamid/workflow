@@ -8,6 +8,6 @@ adding version 2.10.5
 
 lolo 3.0.2
 
-Version: 1.0.4
+Version: 1.0.6
 
 let's go
