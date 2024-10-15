@@ -1,68 +1,70 @@
-name: Create Plugin Tag
+name: Version Tagging
 
 on:
   push:
     branches:
-      - 'delta/**'
+      - 'feature/**'
 
 jobs:
   create-tag:
     runs-on: ubuntu-latest
-    if: >
-      startsWith(github.event.head_commit.message, 'create tag')
-
+    if: startsWith(github.event.head_commit.message, 'create tag')
     permissions:
       contents: write
 
     steps:
+      # Step 1: Checkout Repository
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Extract Version Number
+      # Step 2: Extract Version from Readme.txt
+      - name: Extract Version from Readme
         id: extract_version
         run: |
-          COMMIT_MESSAGE=$(git log -1 --pretty=%B)
-          echo "Latest commit message: $COMMIT_MESSAGE"
+          README_PATH="trunk/readme.md"
 
-          if [[ "$COMMIT_MESSAGE" =~ ^version\.([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-            MAJOR=${BASH_REMATCH[1]}
-            MINOR=${BASH_REMATCH[2]}
-            PATCH=${BASH_REMATCH[3]:-0}  # Default to 0 if patch is empty
-            VERSION="$MAJOR.$MINOR.$PATCH"
-            echo "Extracted version: $VERSION"
-            echo "VERSION=$VERSION" >> $GITHUB_ENV
-          else
-            echo "No valid version number found in the commit message. Exiting."
-            echo "Commit message should start with 'version.' followed by a valid version number (e.g. 'version.1.2.3')."
+          # Check if the readme file exists
+          if [ ! -f "$README_PATH" ]; then
+            echo "Error: Readme file not found at $README_PATH. Exiting."
             exit 1
           fi
 
-      - name: Ensure Tags Directory Exists
-        run: |
-          if [ ! -d "tags" ]; then
-            echo "Tags directory does not exist. Creating 'tags/' directory."
-            mkdir tags
+          # Extract the version number from the readme file
+          VERSION_LINE=$(grep -i "^Version:" "$README_PATH" || true)
+
+          if [[ "$VERSION_LINE" =~ ^Version:\ ([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            VERSION="${BASH_REMATCH[1]}"
+            echo "Extracted version: $VERSION"
+            echo "VERSION=$VERSION" >> $GITHUB_ENV
           else
-            echo "'tags/' directory already exists."
+            echo "Error: No valid version number found in the readme file. Exiting."
+            exit 1
           fi
 
-      - name: Create Tag Folder and Copy Files
+      # Step 3: Check if the Tag Folder Already Exists
+      - name: Check if Tag Folder Exists
         run: |
+          echo "Creating tag folder tags/${{ env.VERSION }}."
           mkdir -p tags/${{ env.VERSION }}
+
+      # Step 4: Create Tag Folder and Copy Files
+      - name: Copy Files to Tag Folder
+        run: |
           rsync -av --exclude='tags' --exclude='.git' --exclude='.github' ./ tags/${{ env.VERSION }}/
           ls -R tags/${{ env.VERSION }}/
 
-      - name: Configure Git
+      # Step 5: Configure Git User
+      - name: Configure Git User
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      # Step 6: Commit and Push Tag Folder
       - name: Commit and Push Tag Folder
         run: |
-          git add tags/${{ env.VERSION }}/
-          git commit -m "Create tag folder v${{ env.VERSION }} from commit ${{ github.sha }}"
+          git add tags/
+          git commit -m "Create tag folder v${{ env.VERSION }} from commit $GITHUB_SHA"
           git push origin ${{ github.ref }}
