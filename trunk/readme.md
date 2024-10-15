@@ -6,7 +6,9 @@ version new created
 
 adding version 2.10.5
 
-Version: 2.10.99
+lolo 3.0.1
+
+Version: 3.0.1
 
 SHAKA LAKA BOOM BOOM
 kikiki
