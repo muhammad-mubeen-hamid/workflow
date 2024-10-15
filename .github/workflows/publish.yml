@@ -104,9 +104,9 @@ jobs:
       # Step 4: Sync Folders to SVN
       - name: Sync Folders to SVN
         run: |
-          rsync -av --delete ./trunk/ svn-repo/trunk/
-          rsync -av --delete ./assets/ svn-repo/assets/
-          rsync -av --delete ./tags/ svn-repo/tags/
+          rsync -av --delete ./trunk/ trunk/
+          rsync -av --delete ./assets/ assets/
+          rsync -av --delete ./tags/ tags/
 
       # Step 5: Add New Files to SVN
       - name: Add New Files to SVN
