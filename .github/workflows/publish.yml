@@ -70,26 +70,27 @@ jobs:
           git push origin ${{ github.ref }}
 
   deploy-svn:
-    needs: version-tagging  # This job runs only if version-tagging completes successfully
+    needs: version-tagging
     runs-on: ubuntu-latest
-    if: "! contains(github.event.head_commit.message, '[skip-deploy]')"  # Skip if the commit contains [skip-deploy]
+    if: "! contains(github.event.head_commit.message, '[skip-deploy]')"
     permissions:
       contents: write
 
     steps:
-      # Step 1: Checkout Repository
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # Step 2: Install SVN
+      - name: Pull Latest Changes
+        run: |
+          git pull origin master
+
       - name: Install SVN
         run: |
           sudo apt-get update
           sudo apt-get install -y subversion
 
-      # Step 3: Checkout SVN Repository
       - name: Checkout SVN Repository
         run: |
           svn checkout --username "${{ secrets.WORDPRESS_SVN_USERNAME }}" --password "${{ secrets.WORDPRESS_SVN_PASSWORD }}" "$SVN_REPO_URL"
@@ -100,20 +101,17 @@ jobs:
         run: |
           ls -R ikhokha-payment/tags/
 
-      # Step 4: Sync Folders to SVN
       - name: Sync Folders to SVN
         run: |
           rsync -av --delete ./trunk/ ikhokha-payment/trunk/
           rsync -av --delete ./assets/ ikhokha-payment/assets/
           rsync -av --delete ./tags/ ikhokha-payment/tags/
 
-      # Step 5: Add New Files to SVN
       - name: Add New Files to SVN
         run: |
           cd ikhokha-payment
           svn add --force * --auto-props --parents --depth infinity -q
 
-      # Step 6: Commit Changes to SVN
       - name: Commit Changes to SVN
         run: |
           cd ikhokha-payment
