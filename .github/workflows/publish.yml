@@ -104,18 +104,18 @@ jobs:
       # Step 4: Sync Folders to SVN
       - name: Sync Folders to SVN
         run: |
-          rsync -av --delete ./trunk/ trunk/
-          rsync -av --delete ./assets/ assets/
-          rsync -av --delete ./tags/ tags/
+          rsync -av --delete ./trunk/ ikhokha-payment/trunk/
+          rsync -av --delete ./assets/ ikhokha-payment/assets/
+          rsync -av --delete ./tags/ ikhokha-payment/tags/
 
       # Step 5: Add New Files to SVN
       - name: Add New Files to SVN
         run: |
-          cd svn-repo
+          cd ikhokha-payment
           svn add --force * --auto-props --parents --depth infinity -q
 
       # Step 6: Commit Changes to SVN
       - name: Commit Changes to SVN
         run: |
-          cd svn-repo
+          cd ikhokha-payment
           svn commit -m "Deploy trunk, assets, and tags from Git commit $GITHUB_SHA" --username "${{ secrets.WORDPRESS_SVN_USERNAME }}" --password "${{ secrets.WORDPRESS_SVN_PASSWORD }}" --no-auth-cache --non-interactive
