@@ -8,7 +8,7 @@ adding version 2.10.5
 
 lolo 3.0.2
 
-Version: 3.0.7
+Version: 99.10.2
 
 SHAKA LAKA BOOM BOOM
 kikiki
