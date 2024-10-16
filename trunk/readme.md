@@ -8,8 +8,10 @@ adding version 2.10.5
 
 lolo 3.0.2
 
-Version: 4.6.8
+Version: 4.5.7
 
 let's go
 
 yolo, new strategy works
+
+repeating version
