@@ -1,4 +1,4 @@
-name: Publish to WordPress.org
+name: Deploy to WordPress.org
 
 on:
   push:
@@ -6,72 +6,8 @@ on:
       - master
 
 jobs:
-  version-tagging:
-    if: "! contains(github.event.head_commit.message, '[skip-deploy]')"
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: true
-
-      - name: Extract Version from Readme
-        id: extract_version
-        run: |
-          README_PATH="trunk/readme.md"
-
-          # Check if the readme file exists
-          if [ ! -f "$README_PATH" ]; then
-            echo "Error: Readme file not found at $README_PATH. Exiting."
-            exit 1
-          fi
-
-          # Extract the version number from the readme file
-          VERSION_LINE=$(grep -i "^Version:" "$README_PATH" || true)
-
-          if [[ "$VERSION_LINE" =~ ^Version:\ ([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
-            VERSION="${BASH_REMATCH[1]}"
-            echo "Extracted version: $VERSION"
-            echo "VERSION=$VERSION" >> $GITHUB_ENV
-          else
-            echo "Error: No valid version number found in the readme file. Exiting."
-            exit 1
-          fi
-
-      - name: Remove Existing Tag Folder
-        run: |
-          if [ -d "tags/${{ env.VERSION }}" ]; then
-            echo "Tag folder tags/${{ env.VERSION }} already exists. Removing it."
-            rm -rf tags/${{ env.VERSION }}
-          fi
-
-      - name: Create Tag Folder and Copy Files
-        run: |
-          mkdir -p tags/${{ env.VERSION }}
-          rsync -av --exclude='tags' --exclude='.git' --exclude='.github' ./ tags/${{ env.VERSION }}/
-          ls -R tags/${{ env.VERSION }}/
-
-      - name: Configure Git User
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Commit and Push Tag Folder
-        run: |
-          git add tags/
-          git commit -m "Create tag folder v${{ env.VERSION }} from commit $GITHUB_SHA [skip-deploy]"
-          git push origin master
-
   deploy-svn:
-    needs: version-tagging
     runs-on: ubuntu-latest
-    if: "! contains(github.event.head_commit.message, '[skip-deploy]')"
-    permissions:
-      contents: write
 
     steps:
       - name: Checkout Repository
