@@ -3,7 +3,7 @@ name: Deploy to WordPress.org
 on:
   push:
     branches:
-      - master
+      - blaster
 
 jobs:
   deploy-svn:
